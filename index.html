@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>NaturelVeg</title>
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: "Segoe UI", Arial, Helvetica, sans-serif;
+    background: linear-gradient(180deg, #f5fbf6 0%, #ecf8ec 100%);
+    color: #243329;
+    overflow-x: hidden;
+    position: relative;
+}
+
+header {
+    background: linear-gradient(135deg, #1f6f44, #2e8b57 60%, #3cb371);
+    color: #fff;
+    text-align: center;
+    padding: 20px 16px;
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    box-shadow: 0 6px 18px rgba(24, 75, 44, 0.18);
+}
+
+nav {
+    position: sticky;
+    top: 0;
+    z-index: 999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 4px 16px rgba(13, 61, 32, 0.08);
+}
+
+nav a {
+    margin: 4px;
+    color: #1f6f44;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    position: relative;
+    padding: 8px 14px;
+    border-radius: 999px;
+    transition: 0.25s ease;
+}
+
+.order-list {
+    display: grid;
+    gap: 12px;
+}
+
+.order-item {
+    background: #f4fbf4;
+    border: 1px solid #d7ead8;
+    border-radius: 12px;
+    padding: 12px;
+}
+
+.order-item strong {
+    color: #1f6f44;
+}
+
+.order-item p {
+    margin: 6px 0 0;
+    color: #456351;
+    line-height: 1.45;
+}
+
+nav a:hover {
+    background: #e8f7eb;
+    color: #0f5b34;
+}
+
+.badge {
+    position: absolute;
+    top: -5px;
+    right: -8px;
+    background: #ea4335;
+    color: white;
+    font-size: 11px;
+    width: 18px;
+    height: 18px;
+    text-align: center;
+    border-radius: 50%;
+    line-height: 18px;
+    font-weight: 700;
+    display: none;
+}
+
+section {
+    padding: 34px 18px;
+    text-align: center;
+}
+
+#home {
+    max-width: 980px;
+    margin: 26px auto;
+    background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(236,248,236,0.94));
+    border: 1px solid rgba(46, 139, 87, 0.18);
+    border-radius: 24px;
+    padding: 56px 24px;
+    box-shadow: 0 20px 50px rgba(30, 88, 53, 0.12);
+}
+
+#home h2 {
+    color: #1c6d41;
+    font-size: clamp(30px, 4vw, 44px);
+    margin: 0 0 12px;
+    font-weight: 800;
+}
+
+#home p {
+    font-size: 18px;
+    color: #3d6f4e;
+    margin: 0;
+    font-weight: 600;
+}
+
+#products {
+    background: linear-gradient(180deg, #2a9a5f 0%, #3cb371 100%);
+    padding: 44px 18px 60px;
+}
+
+#products h2 {
+    color: white;
+    margin-bottom: 24px;
+    font-size: 32px;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 22px;
+    max-width: 1160px;
+    margin: 0 auto;
+}
+
+.card {
+    background: rgba(255,255,255,0.98);
+    border-radius: 18px;
+    overflow: hidden;
+    text-align: center;
+    box-shadow: 0 14px 30px rgba(9, 51, 20, 0.16);
+    border: 1px solid rgba(46, 139, 87, 0.15);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 18px 38px rgba(9, 51, 20, 0.22);
+}
+
+.card img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    display: block;
+    background: #eef6ee;
+}
+
+.card h3 {
+    margin: 14px 0 8px;
+    color: #1f6f44;
+    font-size: 22px;
+}
+
+.card p {
+    margin: 0 14px 10px;
+    color: #456351;
+    line-height: 1.45;
+}
+
+.discount {
+    color: #2e8b57 !important;
+    font-size: 18px;
+    font-weight: 800;
+}
+
+button,
+select,
+input {
+    font: inherit;
+}
+
+button {
+    background: linear-gradient(135deg, #2e8b57, #1f6f44);
+    color: white;
+    border: none;
+    padding: 12px 14px;
+    margin: 10px auto 16px;
+    width: calc(100% - 28px);
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 700;
+    transition: 0.25s ease;
+    box-shadow: 0 10px 18px rgba(34, 92, 56, 0.16);
+}
+
+button:hover {
+    background: linear-gradient(135deg, #1f6f44, #165e37);
+    transform: translateY(-1px);
+}
+
+.panel {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) scale(0.94);
+    width: 420px;
+    max-width: 92%;
+    max-height: 92vh;
+    overflow-y: auto;
+    background: #ffffff;
+    border-radius: 18px;
+    box-shadow: 0 22px 60px rgba(0,0,0,0.24);
+    padding: 22px;
+    transition: opacity 0.28s ease, transform 0.28s ease;
+    z-index: 1100;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.panel.open {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+#panel-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 35, 22, 0.42);
+    backdrop-filter: blur(2px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+    z-index: 1090;
+}
+
+#panel-overlay.show-overlay {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.panel h2 {
+    text-align: center;
+    color: #1f6f44;
+    margin-top: 12px;
+    margin-bottom: 18px;
+    font-size: 28px;
+}
+
+.close-btn {
+    display: block;
+    text-align: right;
+    font-weight: 800;
+    color: #d64545;
+    cursor: pointer;
+}
+
+#payment-panel select,
+#payment-panel input,
+#login-panel input {
+    width: 100%;
+    margin: 10px 0;
+    padding: 12px 13px;
+    border-radius: 10px;
+    border: 1px solid #cce2d1;
+    background: #f9fcf9;
+}
+
+.cart-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 12px 0;
+    padding: 12px;
+    background: #f4fbf4;
+    border-radius: 12px;
+    box-shadow: 0 6px 14px rgba(31, 111, 68, 0.08);
+}
+
+.cart-item img {
+    width: 56px;
+    height: 56px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid #d8eadb;
+}
+
+.cart-item span {
+    flex: 1;
+    text-align: left;
+    font-weight: 700;
+    color: #31543f;
+}
+
+.cart-item button {
+    width: auto;
+    margin: 0;
+    padding: 8px 10px;
+    font-size: 12px;
+}
+
+.cart-total {
+    text-align: right;
+    font-size: 20px;
+    font-weight: 800;
+    margin-top: 16px;
+    color: #1f6f44;
+}
+
+#about,
+#thankyou {
+    max-width: 980px;
+    margin: 20px auto;
+    border-radius: 18px;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.06);
+}
+
+#about {
+    padding: 24px;
+    background: rgba(255,255,255,0.93);
+    color: #305440;
+    font-size: 16px;
+    line-height: 1.7;
+}
+
+#thankyou {
+    text-align: center;
+    background: linear-gradient(135deg, #dff6e6, #f2fff5);
+    color: #1f6f44;
+    padding: 22px;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+footer {
+    text-align: center;
+    color: #4f6c59;
+    padding: 18px 12px 28px;
+    font-weight: 600;
+}
+
+.site-footer {
+    background: linear-gradient(135deg, #183c28, #24583b);
+    color: #f2fff5;
+    padding: 28px 18px 20px;
+    margin-top: 24px;
+}
+
+.footer-grid {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 18px;
+    text-align: left;
+}
+
+.footer-grid h4 {
+    margin: 0 0 10px;
+    font-size: 18px;
+    color: #ffffff;
+}
+
+.footer-grid p,
+.footer-grid a {
+    margin: 6px 0;
+    color: #dcf7e1;
+    text-decoration: none;
+}
+
+.footer-grid a:hover {
+    color: #ffffff;
+}
+
+.social-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.social-links a {
+    padding: 7px 10px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.12);
+}
+
+.footer-bottom {
+    max-width: 1100px;
+    margin: 18px auto 0;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255,255,255,0.18);
+    text-align: center;
+    color: #e8f8ea;
+    font-size: 14px;
+}
+
+#toast {
+    position: fixed;
+    background: #1f6f44;
+    color: white;
+    padding: 12px 16px;
+    border-radius: 10px;
+    opacity: 0;
+    transition: opacity 0.35s ease, top 0.25s ease, left 0.25s ease;
+    z-index: 2000;
+    box-shadow: 0 10px 22px rgba(0,0,0,0.2);
+    pointer-events: none;
+}
+
+@media (max-width: 600px) {
+    header {
+        font-size: 26px;
+    }
+
+    nav {
+        gap: 2px;
+    }
+
+    nav a {
+        font-size: 14px;
+        padding: 7px 10px;
+    }
+
+    .container {
+        grid-template-columns: 1fr;
+    }
+
+    .panel {
+        width: 96%;
+    }
+}
+</style>
+</head>
+<body>
+
+<header>🌿 NaturelVeg</header>
+
+<nav>
+<a href="#home">Home</a>
+<a id="cartBtn">Cart <span id="cart-badge" class="badge">0</span></a>
+<a id="paymentBtn">Payment</a>
+<a id="loginBtn">Login</a>
+<a id="ordersBtn">My Orders</a>
+<a id="contactBtn">Contact</a>
+</nav>
+
+<section id="home">
+<h2>Welcome to NaturelVeg</h2>
+<p>Fresh & Organic Vegetables Online</p>
+</section>
+
+<section id="products">
+<h2 style="color:white;text-shadow:2px 2px #2E8B57;">Our Products</h2>
+<div class="container" id="product-container"></div>
+</section>
+
+<!-- CART PANEL -->
+<div id="cart-panel" class="panel">
+<span class="close-btn" onclick="togglePanel('cart-panel')">✖ Close</span>
+<h2>Your Cart</h2>
+<div id="cart-items"></div>
+<p class="cart-total">Total: ₹<span id="cart-total">0</span></p>
+<button id="proceedPaymentBtn">Proceed to Payment</button>
+</div>
+
+<!-- PAYMENT PANEL -->
+<div id="payment-panel" class="panel">
+<span class="close-btn" onclick="togglePanel('payment-panel')">✖ Close</span>
+<h2>Payment Options</h2>
+<select id="method">
+<option value="UPI">UPI</option>
+<option value="Card">Credit/Debit Card</option>
+<option value="COD">Cash on Delivery</option>
+</select>
+<input type="text" id="details" placeholder="Enter UPI ID or Card Number">
+<textarea id="delivery-address" rows="3" placeholder="Enter delivery address" style="width:100%; margin:10px 0; padding:12px 13px; border-radius:10px; border:1px solid #cce2d1; background:#f9fcf9; resize:vertical;"></textarea>
+<button id="payBtn">Pay Now</button>
+</div>
+
+<!-- LOGIN PANEL -->
+<div id="login-panel" class="panel">
+<span class="close-btn" onclick="togglePanel('login-panel')">✖ Close</span>
+<h2>Login / Sign Up</h2>
+<input id="login-email" type="email" placeholder="Email">
+<input id="login-password" type="password" placeholder="Password">
+<button id="loginActionBtn">Login</button>
+<button id="registerActionBtn">Create Account</button>
+</div>
+
+<!-- ORDERS PANEL -->
+<div id="orders-panel" class="panel">
+<span class="close-btn" onclick="togglePanel('orders-panel')">✖ Close</span>
+<h2>My Orders</h2>
+<div id="orders-list" class="order-list"></div>
+</div>
+
+<!-- CONTACT PANEL -->
+<div id="contact-panel" class="panel">
+<span class="close-btn" onclick="togglePanel('contact-panel')">✖ Close</span>
+<h2>Contact Us</h2>
+<p>Email: naturelveg@gmail.com</p>
+<p>Contact Number: 7799410825</p>
+</div>
+
+<div id="panel-overlay" onclick="closeAllPanels()"></div>
+
+<footer class="site-footer">
+    <div class="footer-grid">
+        <div>
+            <h4>About NaturelVeg</h4>
+            <p>Fresh vegetables, trusted quality, and eco-friendly delivery.</p>
+        </div>
+        <div>
+            <h4>Contact</h4>
+            <p>Email: naturelveg@gmail.com</p>
+            <p>Phone: 7799410825</p>
+            <p>Location: India</p>
+        </div>
+        <div>
+            <h4>Follow Us</h4>
+            <div class="social-links">
+                <a href="https://www.instagram.com" target="_blank" rel="noreferrer">Instagram</a>
+                <a href="https://www.facebook.com" target="_blank" rel="noreferrer">Facebook</a>
+                <a href="https://wa.me/917799410825" target="_blank" rel="noreferrer">WhatsApp</a>
+            </div>
+        </div>
+    </div>
+    <div class="footer-bottom">© 2026 NaturelVeg. All rights reserved.</div>
+</footer>
+
+<div id="about">
+<p>NaturelVeg is your trusted online destination for fresh and organic vegetables. We source all our produce from sustainable farms, ensuring that every vegetable is natural, healthy, and pesticide-free. Shop online conveniently while supporting eco-friendly farming.</p>
+</div>
+
+<div id="thankyou">
+🌿 Thank you for visiting NaturelVeg! Enjoy our fresh and organic vegetables. Come back soon! 🌱
+</div>
+
+<div id="toast"></div>
+
+<script>
+const productContainer=document.getElementById('product-container');
+let products = [];
+let currentUser = null;
+let authToken = '';
+
+async function parseJsonResponse(response) {
+    const text = await response.text();
+    if (!text) {
+        return {};
+    }
+
+    try {
+        return JSON.parse(text);
+    } catch (error) {
+        return {};
+    }
+}
+
+function makeSvgDataUri(label, background, accent) {
+    const svg = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="400" height="260" viewBox="0 0 400 260">
+            <rect width="100%" height="100%" fill="${background}" />
+            <text x="200" y="130" text-anchor="middle" font-size="34" fill="#2E8B57" font-family="Arial">${label}</text>
+            <circle cx="110" cy="110" r="58" fill="${accent}" opacity="0.8" />
+        </svg>
+    `;
+    return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+}
+
+const fallbackProducts = [
+    { name: 'Tomato', price: 20, img: '/assets/tomato.svg', desc: 'Fresh red tomatoes, rich in vitamins and antioxidants.' },
+    { name: 'Potato', price: 30, img: '/assets/potato.jpg', desc: 'Organic potatoes, perfect for fries, baking, and healthy meals.' },
+    { name: 'Onion', price: 18, img: '/assets/onion.jpg', desc: 'Crisp and flavorful onions, great for all dishes.' },
+    { name: 'Carrot', price: 25, img: '/assets/carrot.jpg', desc: 'Sweet and crunchy carrots, rich in vitamin A.' },
+    { name: 'Cucumber', price: 15, img: '/assets/cucumber.svg', desc: 'Fresh cucumbers, perfect for salads and detox drinks.' },
+    { name: 'Black Pepper', price: 40, img: '/assets/black-pepper.jpg', desc: 'Premium black pepper for your daily cooking and seasoning.' }
+];
+
+function renderProducts(items) {
+    productContainer.innerHTML = '';
+    items.forEach((p)=>{
+        const div=document.createElement('div');
+        div.className='card';
+
+        const img=document.createElement('img');
+        img.src=p.img;
+        img.alt=p.name;
+        img.loading='lazy';
+        img.decoding='async';
+        img.onerror = () => {
+            img.src = makeSvgDataUri(p.name, '#f6fff3', '#ff5d5d');
+        };
+
+        const title=document.createElement('h3');
+        title.textContent=p.name;
+
+        const price=document.createElement('p');
+        price.className='discount';
+        price.textContent=`₹${p.price}`;
+
+        const desc=document.createElement('p');
+        desc.textContent=p.desc;
+
+        const button=document.createElement('button');
+        button.textContent='Add to Cart';
+        button.addEventListener('click',()=>{
+            addToCart(p);
+            showToastNearButton(`${p.name} has been added to your cart!`, button);
+        });
+
+        div.appendChild(img);
+        div.appendChild(title);
+        div.appendChild(price);
+        div.appendChild(desc);
+        div.appendChild(button);
+        productContainer.appendChild(div);
+    });
+}
+
+async function loadProducts() {
+    try {
+        const response = await fetch('/api/products');
+        const data = await parseJsonResponse(response);
+        products = data.products || fallbackProducts;
+    } catch (error) {
+        console.error('Failed to load products:', error);
+        products = fallbackProducts;
+    }
+
+    renderProducts(products);
+}
+
+function renderCustomerOrders(orders) {
+    const ordersList = document.getElementById('orders-list');
+    ordersList.innerHTML = '';
+
+    if (!orders.length) {
+        ordersList.innerHTML = '<p>You have no orders yet.</p>';
+        return;
+    }
+
+    orders.forEach((order) => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'order-item';
+
+        const title = document.createElement('strong');
+        title.textContent = `Order #${order.id}`;
+
+        const meta = document.createElement('p');
+        meta.innerHTML = `Method: ${order.method || 'UPI'}<br>Total: ₹${order.total || 0}`;
+
+        const address = document.createElement('p');
+        address.innerHTML = `<strong>Delivery Address:</strong> ${order.deliveryAddress || order.delivery_address || 'Not provided'}`;
+
+        wrapper.appendChild(title);
+        wrapper.appendChild(meta);
+        wrapper.appendChild(address);
+        ordersList.appendChild(wrapper);
+    });
+}
+
+async function loadCustomerOrders() {
+    if (!currentUser?.email || !authToken) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/orders?email=${encodeURIComponent(currentUser.email)}`);
+        const data = await parseJsonResponse(response);
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Unable to load orders');
+        }
+
+        renderCustomerOrders(data.orders || []);
+    } catch (error) {
+        console.error('Failed to load customer orders:', error);
+        renderCustomerOrders([]);
+    }
+}
+
+async function performAuth(type) {
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+
+    if (!email || !password) {
+        alert('Please enter both email and password.');
+        return;
+    }
+
+    try {
+        const response = await fetch(type === 'register' ? '/api/register' : '/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+
+        const result = await parseJsonResponse(response);
+
+        if (!response.ok) {
+            throw new Error(result.message || 'Authentication failed');
+        }
+
+        if (type === 'login') {
+            if (!result.email || !result.token) {
+                throw new Error('Login response was incomplete. Please try again.');
+            }
+
+            currentUser = { email: result.email };
+            authToken = result.token || '';
+            alert('Login Successful');
+            await loadCustomerOrders();
+        } else {
+            alert('Account created successfully. You can now log in.');
+        }
+
+        togglePanel('login-panel');
+    } catch (error) {
+        alert(error.message || 'Authentication failed');
+    }
+}
+
+loadProducts().catch((error) => {
+    console.error('Failed to load products:', error);
+    productContainer.innerHTML = '<p>Unable to load products right now.</p>';
+});
+
+// Toast function near button
+function showToastNearButton(msg, button) {
+    const toast = document.getElementById('toast');
+    toast.innerText = msg;
+    const rect = button.getBoundingClientRect();
+    toast.style.top = rect.top + window.scrollY - 40 + "px"; 
+    toast.style.left = rect.left + window.scrollX + "px";
+    toast.style.opacity = 1;
+    setTimeout(() => { toast.style.opacity = 0; }, 2000);
+}
+
+// Cart Logic
+let cart=[];
+function closeAllPanels() {
+    document.querySelectorAll('.panel').forEach(panel => panel.classList.remove('open'));
+    document.getElementById('panel-overlay').classList.remove('show-overlay');
+    document.body.style.overflow = '';
+}
+
+function openPanel(id) {
+    closeAllPanels();
+    const panel = document.getElementById(id);
+    const overlay = document.getElementById('panel-overlay');
+    panel.classList.add('open');
+    overlay.classList.add('show-overlay');
+    document.body.style.overflow = 'hidden';
+}
+
+function togglePanel(id) {
+    const panel = document.getElementById(id);
+    const overlay = document.getElementById('panel-overlay');
+    const isOpen = panel.classList.contains('open');
+
+    if (isOpen) {
+        panel.classList.remove('open');
+        overlay.classList.remove('show-overlay');
+        document.body.style.overflow = '';
+    } else {
+        openPanel(id);
+    }
+}
+
+function addToCart(product){
+    cart.push({...product,selected:true});
+    updateCart();
+}
+
+function openPaymentPanel() {
+    if (!currentUser?.email || !authToken) {
+        alert('Please login before making payment.');
+        openPanel('login-panel');
+        return;
+    }
+
+    openPanel('payment-panel');
+}
+
+function updateCart(){
+    const div=document.getElementById('cart-items'); let total=0; div.innerHTML='';
+    cart.forEach((item,i)=>{
+        total+=item.price;
+        const itemDiv=document.createElement('div'); itemDiv.className='cart-item';
+        const checkbox=document.createElement('input'); checkbox.type='checkbox'; checkbox.checked=true;
+        checkbox.addEventListener('change',()=>{item.selected=checkbox.checked;});
+        itemDiv.appendChild(checkbox);
+        const img=document.createElement('img'); img.src=item.img; img.alt=item.name;
+        itemDiv.appendChild(img);
+        const span=document.createElement('span'); span.textContent=` ${item.name} - ₹${item.price}`; itemDiv.appendChild(span);
+        const removeBtn=document.createElement('button'); removeBtn.textContent='Remove';
+        removeBtn.addEventListener('click',()=>{cart.splice(i,1);updateCart();});
+        itemDiv.appendChild(removeBtn); div.appendChild(itemDiv);
+    });
+    document.getElementById('cart-total').innerText=total;
+    updateCartBadge();
+}
+
+// Update cart badge
+function updateCartBadge(){
+    const badge=document.getElementById('cart-badge');
+    if(cart.length>0){badge.style.display='inline'; badge.innerText = cart.length;}
+    else badge.style.display='none';
+}
+
+// Payment
+async function submitOrder() {
+    if (!currentUser?.email || !authToken) {
+        alert('Please login before making payment.');
+        openPanel('login-panel');
+        return;
+    }
+
+    const method=document.getElementById('method').value;
+    const details=document.getElementById('details').value;
+    const deliveryAddress=document.getElementById('delivery-address').value.trim();
+    const selected=cart.filter(it=>it.selected);
+
+    if(!selected.length){
+        alert('No items selected!');
+        return;
+    }
+
+    if (!deliveryAddress) {
+        alert('Please enter your delivery address before payment.');
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/orders', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ items: selected, method, details, email: currentUser?.email || '', deliveryAddress })
+        });
+
+        const result = await parseJsonResponse(response);
+
+        if (!response.ok) {
+            throw new Error(result.message || 'Payment failed');
+        }
+
+        alert(`Payment Successful!\nMethod: ${method}\nDetails: ${details}\nDelivery Address: ${deliveryAddress}\nTotal: ₹${result.order.total}`);
+        cart=[];
+        updateCart();
+        await loadCustomerOrders();
+        togglePanel('payment-panel');
+    } catch (error) {
+        alert(error.message || 'Payment failed');
+    }
+}
+
+document.getElementById('payBtn').addEventListener('click', submitOrder);
+document.getElementById('loginActionBtn').addEventListener('click', () => performAuth('login'));
+document.getElementById('registerActionBtn').addEventListener('click', () => performAuth('register'));
+
+// Panel buttons
+document.getElementById('cartBtn').addEventListener('click',()=>openPanel('cart-panel'));
+document.getElementById('paymentBtn').addEventListener('click',()=>openPaymentPanel());
+document.getElementById('loginBtn').addEventListener('click',()=>openPanel('login-panel'));
+document.getElementById('ordersBtn').addEventListener('click',()=>{
+    if (!currentUser?.email || !authToken) {
+        alert('Please login to view your orders.');
+        openPanel('login-panel');
+        return;
+    }
+    loadCustomerOrders();
+    openPanel('orders-panel');
+});
+document.getElementById('contactBtn').addEventListener('click',()=>openPanel('contact-panel'));
+document.getElementById('proceedPaymentBtn').addEventListener('click',()=>openPaymentPanel());
+</script>
+
+</body>
+</html>
