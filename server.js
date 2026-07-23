@@ -92,7 +92,33 @@ function addDeliveryAddressColumnIfMissing() {
   }
 }
 
+function ensureDemoAccounts() {
+  const demoAccounts = [
+    { email: 'gu', password: 'secret123' },
+    { email: 'naturelveg@example.com', password: 'secret123' },
+    { email: 'test@example.com', password: 'secret123' },
+    { email: 'customer@test.com', password: 'secret123' }
+  ];
+
+  for (const account of demoAccounts) {
+    const email = account.email.trim().toLowerCase();
+    const passwordHash = hashPassword(account.password);
+    const existingUser = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
+
+    if (!existingUser) {
+      db.prepare('INSERT INTO users (email, password_hash) VALUES (?, ?)')
+        .run(email, passwordHash);
+      continue;
+    }
+
+    if (existingUser.password_hash !== passwordHash) {
+      db.prepare('UPDATE users SET password_hash = ? WHERE email = ?').run(passwordHash, email);
+    }
+  }
+}
+
 addDeliveryAddressColumnIfMissing();
+ensureDemoAccounts();
 
 app.get('/api/products', (req, res) => {
   res.json({ products });

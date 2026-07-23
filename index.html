@@ -272,6 +272,7 @@ button:hover {
 
 #payment-panel select,
 #payment-panel input,
+#payment-panel textarea,
 #login-panel input {
     width: 100%;
     margin: 10px 0;
@@ -279,6 +280,65 @@ button:hover {
     border-radius: 10px;
     border: 1px solid #cce2d1;
     background: #f9fcf9;
+}
+
+.payment-layout {
+    display: grid;
+    gap: 16px;
+}
+
+.payment-summary,
+.checkout-form {
+    background: #f8fbf8;
+    border: 1px solid #dbeadf;
+    border-radius: 14px;
+    padding: 14px;
+}
+
+.payment-summary h3,
+.checkout-form h3 {
+    margin: 0 0 12px;
+    color: #1f6f44;
+}
+
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px dashed #d7e7da;
+    color: #465d4d;
+    font-size: 14px;
+}
+
+.summary-item:last-child {
+    border-bottom: none;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.checkout-form label {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: #365342;
+    margin-top: 4px;
+}
+
+.checkout-form input,
+.checkout-form textarea,
+.checkout-form select {
+    margin-top: 6px;
+}
+
+#payment-panel textarea {
+    resize: vertical;
+    min-height: 80px;
 }
 
 .cart-item {
@@ -481,15 +541,61 @@ footer {
 <!-- PAYMENT PANEL -->
 <div id="payment-panel" class="panel">
 <span class="close-btn" onclick="togglePanel('payment-panel')">✖ Close</span>
-<h2>Payment Options</h2>
-<select id="method">
-<option value="UPI">UPI</option>
-<option value="Card">Credit/Debit Card</option>
-<option value="COD">Cash on Delivery</option>
-</select>
-<input type="text" id="details" placeholder="Enter UPI ID or Card Number">
-<textarea id="delivery-address" rows="3" placeholder="Enter delivery address" style="width:100%; margin:10px 0; padding:12px 13px; border-radius:10px; border:1px solid #cce2d1; background:#f9fcf9; resize:vertical;"></textarea>
-<button id="payBtn">Pay Now</button>
+<h2>Checkout & Payment</h2>
+<div class="payment-layout">
+    <div class="payment-summary">
+        <h3>Cart Review</h3>
+        <div id="payment-cart-items"></div>
+        <p class="cart-total">Total: ₹<span id="payment-total">0</span></p>
+    </div>
+
+    <div class="checkout-form">
+        <h3>Delivery Address</h3>
+        <label>Full Name
+            <input id="customer-name" type="text" placeholder="Enter your name">
+        </label>
+
+        <div class="form-grid">
+            <label>Phone Number
+                <input id="customer-phone" type="tel" placeholder="10-digit mobile number">
+            </label>
+            <label>Pin Code
+                <input id="customer-pincode" type="text" placeholder="Enter pin code">
+            </label>
+        </div>
+
+        <label>House / Flat / Street Address
+            <textarea id="customer-address" rows="3" placeholder="Enter House No., Street, Area"></textarea>
+        </label>
+
+        <div class="form-grid">
+            <label>City
+                <input id="customer-city" type="text" placeholder="Enter city">
+            </label>
+            <label>State
+                <input id="customer-state" type="text" placeholder="Enter state">
+            </label>
+        </div>
+
+        <label>Landmark (Optional)
+            <input id="customer-landmark" type="text" placeholder="Nearby landmark">
+        </label>
+
+        <label>Payment Type
+            <select id="method">
+                <option value="UPI">UPI</option>
+                <option value="Card">Credit / Debit Card</option>
+                <option value="COD">Cash on Delivery</option>
+            </select>
+        </label>
+
+        <label>Payment Details
+            <input type="text" id="details" placeholder="Enter UPI ID or Card Number">
+        </label>
+
+        <button id="payBtn">Confirm Order</button>
+    </div>
+</div>
 </div>
 
 <!-- LOGIN PANEL -->
@@ -788,6 +894,30 @@ function addToCart(product){
     updateCart();
 }
 
+function renderPaymentSummary() {
+    const summaryContainer = document.getElementById('payment-cart-items');
+    const paymentTotal = document.getElementById('payment-total');
+    const selectedItems = cart.filter((item) => item.selected !== false);
+    summaryContainer.innerHTML = '';
+
+    if (!selectedItems.length) {
+        summaryContainer.innerHTML = '<p>No items in your cart yet.</p>';
+        paymentTotal.innerText = '0';
+        return;
+    }
+
+    let total = 0;
+    selectedItems.forEach((item) => {
+        total += Number(item.price || 0);
+        const row = document.createElement('div');
+        row.className = 'summary-item';
+        row.innerHTML = `<span>${item.name}</span><strong>₹${item.price}</strong>`;
+        summaryContainer.appendChild(row);
+    });
+
+    paymentTotal.innerText = total;
+}
+
 function openPaymentPanel() {
     if (!currentUser?.email || !authToken) {
         alert('Please login before making payment.');
@@ -795,6 +925,13 @@ function openPaymentPanel() {
         return;
     }
 
+    if (!cart.length) {
+        alert('Your cart is empty. Add items before checkout.');
+        openPanel('cart-panel');
+        return;
+    }
+
+    renderPaymentSummary();
     openPanel('payment-panel');
 }
 
@@ -804,7 +941,7 @@ function updateCart(){
         total+=item.price;
         const itemDiv=document.createElement('div'); itemDiv.className='cart-item';
         const checkbox=document.createElement('input'); checkbox.type='checkbox'; checkbox.checked=true;
-        checkbox.addEventListener('change',()=>{item.selected=checkbox.checked;});
+        checkbox.addEventListener('change',()=>{item.selected=checkbox.checked; renderPaymentSummary();});
         itemDiv.appendChild(checkbox);
         const img=document.createElement('img'); img.src=item.img; img.alt=item.name;
         itemDiv.appendChild(img);
@@ -814,6 +951,7 @@ function updateCart(){
         itemDiv.appendChild(removeBtn); div.appendChild(itemDiv);
     });
     document.getElementById('cart-total').innerText=total;
+    renderPaymentSummary();
     updateCartBadge();
 }
 
@@ -825,6 +963,18 @@ function updateCartBadge(){
 }
 
 // Payment
+function updatePaymentPlaceholder() {
+    const method=document.getElementById('method').value;
+    const detailsInput=document.getElementById('details');
+    if (method === 'UPI') {
+        detailsInput.placeholder = 'Enter UPI ID (for example: name@upi)';
+    } else if (method === 'Card') {
+        detailsInput.placeholder = 'Enter card number or card name';
+    } else {
+        detailsInput.placeholder = 'Cash on delivery details';
+    }
+}
+
 async function submitOrder() {
     if (!currentUser?.email || !authToken) {
         alert('Please login before making payment.');
@@ -833,19 +983,35 @@ async function submitOrder() {
     }
 
     const method=document.getElementById('method').value;
-    const details=document.getElementById('details').value;
-    const deliveryAddress=document.getElementById('delivery-address').value.trim();
-    const selected=cart.filter(it=>it.selected);
+    const details=document.getElementById('details').value.trim();
+    const customerName=document.getElementById('customer-name').value.trim();
+    const customerPhone=document.getElementById('customer-phone').value.trim();
+    const customerPincode=document.getElementById('customer-pincode').value.trim();
+    const customerAddress=document.getElementById('customer-address').value.trim();
+    const customerCity=document.getElementById('customer-city').value.trim();
+    const customerState=document.getElementById('customer-state').value.trim();
+    const customerLandmark=document.getElementById('customer-landmark').value.trim();
+    const selected=cart.filter((item) => item.selected !== false);
 
     if(!selected.length){
         alert('No items selected!');
         return;
     }
 
-    if (!deliveryAddress) {
-        alert('Please enter your delivery address before payment.');
+    if (!customerName || !customerPhone || !customerPincode || !customerAddress || !customerCity || !customerState) {
+        alert('Please complete all required delivery details before payment.');
         return;
     }
+
+    const deliveryAddress = [
+        customerName,
+        `Phone: ${customerPhone}`,
+        `PIN: ${customerPincode}`,
+        customerAddress,
+        customerCity,
+        customerState,
+        customerLandmark ? `Landmark: ${customerLandmark}` : ''
+    ].filter(Boolean).join(', ');
 
     try {
         const response = await fetch('/api/orders', {
@@ -860,7 +1026,7 @@ async function submitOrder() {
             throw new Error(result.message || 'Payment failed');
         }
 
-        alert(`Payment Successful!\nMethod: ${method}\nDetails: ${details}\nDelivery Address: ${deliveryAddress}\nTotal: ₹${result.order.total}`);
+        alert(`Payment Successful!\nMethod: ${method}\nDetails: ${details || 'Not provided'}\nDelivery Address: ${deliveryAddress}\nTotal: ₹${result.order.total}`);
         cart=[];
         updateCart();
         await loadCustomerOrders();
@@ -870,7 +1036,9 @@ async function submitOrder() {
     }
 }
 
+document.getElementById('method').addEventListener('change', updatePaymentPlaceholder);
 document.getElementById('payBtn').addEventListener('click', submitOrder);
+updatePaymentPlaceholder();
 document.getElementById('loginActionBtn').addEventListener('click', () => performAuth('login'));
 document.getElementById('registerActionBtn').addEventListener('click', () => performAuth('register'));
 
