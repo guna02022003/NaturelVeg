@@ -43,6 +43,7 @@ db.exec(`
     email TEXT,
     method TEXT NOT NULL,
     details TEXT,
+    unit TEXT,
     delivery_address TEXT,
     total INTEGER NOT NULL,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -53,6 +54,8 @@ db.exec(`
     order_id TEXT NOT NULL,
     name TEXT NOT NULL,
     price INTEGER NOT NULL,
+    quantity REAL NOT NULL DEFAULT 1,
+    unit TEXT DEFAULT 'kgs',
     img TEXT,
     desc TEXT,
     FOREIGN KEY(order_id) REFERENCES orders(id)
@@ -60,6 +63,17 @@ db.exec(`
 `);
 
 app.use(express.json());
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+
+  next();
+});
 app.use(express.static(path.join(__dirname)));
 
 app.use((err, req, res, next) => {
@@ -92,6 +106,26 @@ function addDeliveryAddressColumnIfMissing() {
   }
 }
 
+function addUnitColumnIfMissing() {
+  const columns = db.prepare('PRAGMA table_info(orders)').all();
+  const hasUnit = columns.some((column) => column.name === 'unit');
+
+  if (!hasUnit) {
+    db.exec('ALTER TABLE orders ADD COLUMN unit TEXT');
+  }
+}
+
+function addOrderItemColumnsIfMissing() {
+  const columns = db.prepare('PRAGMA table_info(order_items)').all();
+  if (!columns.some((column) => column.name === 'quantity')) {
+    db.exec('ALTER TABLE order_items ADD COLUMN quantity REAL DEFAULT 1');
+  }
+
+  if (!columns.some((column) => column.name === 'unit')) {
+    db.exec("ALTER TABLE order_items ADD COLUMN unit TEXT DEFAULT 'kgs'");
+  }
+}
+
 function ensureDemoAccounts() {
   const demoAccounts = [
     { email: 'gu', password: 'secret123' },
@@ -118,6 +152,8 @@ function ensureDemoAccounts() {
 }
 
 addDeliveryAddressColumnIfMissing();
+addUnitColumnIfMissing();
+addOrderItemColumnsIfMissing();
 ensureDemoAccounts();
 
 app.get('/api/products', (req, res) => {
@@ -184,7 +220,7 @@ app.get('/api/admin/orders', (req, res) => {
 });
 
 app.post('/api/orders', (req, res) => {
-  const { items = [], method = 'UPI', details = '', email = '', deliveryAddress = '' } = req.body || {};
+  const { items = [], method = 'UPI', details = '', unit = 'kgs', email = '', deliveryAddress = '' } = req.body || {};
 
   if (!Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ message: 'Cart is empty.' });
@@ -193,15 +229,15 @@ app.post('/api/orders', (req, res) => {
   const total = items.reduce((sum, item) => sum + Number(item.price || 0), 0);
   const orderId = `ORD-${Date.now()}`;
 
-  db.prepare('INSERT INTO orders (id, email, method, details, delivery_address, total) VALUES (?, ?, ?, ?, ?, ?)')
-    .run(orderId, email || null, method, details, deliveryAddress || null, total);
+  db.prepare('INSERT INTO orders (id, email, method, details, unit, delivery_address, total) VALUES (?, ?, ?, ?, ?, ?, ?)')
+    .run(orderId, email || null, method, details, unit, deliveryAddress || null, total);
 
-  const insertItem = db.prepare('INSERT INTO order_items (order_id, name, price, img, desc) VALUES (?, ?, ?, ?, ?)');
+  const insertItem = db.prepare('INSERT INTO order_items (order_id, name, price, quantity, unit, img, desc) VALUES (?, ?, ?, ?, ?, ?, ?)');
   for (const item of items) {
-    insertItem.run(orderId, item.name, Number(item.price || 0), item.img || '', item.desc || '');
+    insertItem.run(orderId, item.name, Number(item.price || 0), Number(item.quantity || 1), item.unit || 'kgs', item.img || '', item.desc || '');
   }
 
-  res.json({ message: 'Payment Successful!', order: { id: orderId, email, method, details, deliveryAddress, delivery_address: deliveryAddress, total, items } });
+  res.json({ message: 'Payment Successful!', order: { id: orderId, email, method, details, unit, deliveryAddress, delivery_address: deliveryAddress, total, items } });
 });
 
 app.get('/api/orders', (req, res) => {
@@ -216,6 +252,7 @@ app.get('/api/orders', (req, res) => {
         ...order,
         deliveryAddress: order.delivery_address,
         delivery_address: order.delivery_address,
+        unit: order.unit || 'kgs',
         items
       };
     });

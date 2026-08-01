@@ -589,6 +589,13 @@ footer {
             </select>
         </label>
 
+        <label>Measurement Unit
+            <select id="unit">
+                <option value="kgs">kgs</option>
+                <option value="pcs">pcs</option>
+            </select>
+        </label>
+
         <label>Payment Details
             <input type="text" id="details" placeholder="Enter UPI ID or Card Number">
         </label>
@@ -661,9 +668,15 @@ footer {
 
 <script>
 const productContainer=document.getElementById('product-container');
+const API_BASE = window.location.protocol.startsWith('http') ? `${window.location.protocol}//${window.location.host}` : 'http://localhost:3000';
 let products = [];
 let currentUser = null;
 let authToken = '';
+
+async function apiFetch(path, options = {}) {
+    const url = `${API_BASE}${path}`;
+    return fetch(url, options);
+}
 
 async function parseJsonResponse(response) {
     const text = await response.text();
@@ -741,7 +754,7 @@ function renderProducts(items) {
 
 async function loadProducts() {
     try {
-        const response = await fetch('/api/products');
+        const response = await apiFetch('/api/products');
         const data = await parseJsonResponse(response);
         products = data.products || fallbackProducts;
     } catch (error) {
@@ -769,7 +782,7 @@ function renderCustomerOrders(orders) {
         title.textContent = `Order #${order.id}`;
 
         const meta = document.createElement('p');
-        meta.innerHTML = `Method: ${order.method || 'UPI'}<br>Total: ₹${order.total || 0}`;
+        meta.innerHTML = `Method: ${order.method || 'UPI'}<br>Unit: ${order.unit || 'kgs'}<br>Total: ₹${order.total || 0}`;
 
         const address = document.createElement('p');
         address.innerHTML = `<strong>Delivery Address:</strong> ${order.deliveryAddress || order.delivery_address || 'Not provided'}`;
@@ -787,7 +800,7 @@ async function loadCustomerOrders() {
     }
 
     try {
-        const response = await fetch(`/api/orders?email=${encodeURIComponent(currentUser.email)}`);
+        const response = await apiFetch(`/api/orders?email=${encodeURIComponent(currentUser.email)}`);
         const data = await parseJsonResponse(response);
 
         if (!response.ok) {
@@ -811,7 +824,7 @@ async function performAuth(type) {
     }
 
     try {
-        const response = await fetch(type === 'register' ? '/api/register' : '/api/login', {
+        const response = await apiFetch(type === 'register' ? '/api/register' : '/api/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password })
@@ -890,7 +903,7 @@ function togglePanel(id) {
 }
 
 function addToCart(product){
-    cart.push({...product,selected:true});
+    cart.push({...product, selected:true, quantity:1, unit:'kgs'});
     updateCart();
 }
 
@@ -908,14 +921,17 @@ function renderPaymentSummary() {
 
     let total = 0;
     selectedItems.forEach((item) => {
-        total += Number(item.price || 0);
+        const quantity = Number(item.quantity || 1);
+        const itemTotal = quantity * Number(item.price || 0);
+        total += itemTotal;
+
         const row = document.createElement('div');
         row.className = 'summary-item';
-        row.innerHTML = `<span>${item.name}</span><strong>₹${item.price}</strong>`;
+        row.innerHTML = `<span>${item.name} (${quantity} ${item.unit})</span><strong>₹${itemTotal.toFixed(2)}</strong>`;
         summaryContainer.appendChild(row);
     });
 
-    paymentTotal.innerText = total;
+    paymentTotal.innerText = total.toFixed(2);
 }
 
 function openPaymentPanel() {
@@ -938,19 +954,99 @@ function openPaymentPanel() {
 function updateCart(){
     const div=document.getElementById('cart-items'); let total=0; div.innerHTML='';
     cart.forEach((item,i)=>{
-        total+=item.price;
+        const quantity = Number(item.quantity || 1);
+        const itemTotal = quantity * Number(item.price || 0);
+        total += itemTotal;
+
         const itemDiv=document.createElement('div'); itemDiv.className='cart-item';
         const checkbox=document.createElement('input'); checkbox.type='checkbox'; checkbox.checked=true;
         checkbox.addEventListener('change',()=>{item.selected=checkbox.checked; renderPaymentSummary();});
         itemDiv.appendChild(checkbox);
+
         const img=document.createElement('img'); img.src=item.img; img.alt=item.name;
         itemDiv.appendChild(img);
-        const span=document.createElement('span'); span.textContent=` ${item.name} - ₹${item.price}`; itemDiv.appendChild(span);
+
+        const details = document.createElement('div');
+        details.style.flex = '1';
+        details.style.textAlign = 'left';
+
+        const title = document.createElement('div');
+        title.textContent = item.name;
+        title.style.fontWeight = '700';
+        title.style.marginBottom = '6px';
+        details.appendChild(title);
+
+        const priceInfo = document.createElement('div');
+        priceInfo.textContent = `Price: ₹${item.price} per ${item.unit}`;
+        priceInfo.style.fontSize = '13px';
+        priceInfo.style.color = '#455a4d';
+        details.appendChild(priceInfo);
+
+        const controls = document.createElement('div');
+        controls.style.display = 'flex';
+        controls.style.gap = '8px';
+        controls.style.flexWrap = 'wrap';
+        controls.style.alignItems = 'center';
+        controls.style.marginTop = '8px';
+
+        const qtyLabel = document.createElement('label');
+        qtyLabel.textContent = 'Qty:';
+        qtyLabel.style.fontSize = '13px';
+        qtyLabel.style.fontWeight = '700';
+
+        const qtyInput = document.createElement('input');
+        qtyInput.type = 'number';
+        qtyInput.min = item.unit === 'kgs' ? '0.25' : '1';
+        qtyInput.step = item.unit === 'kgs' ? '0.25' : '1';
+        qtyInput.value = quantity;
+        qtyInput.style.width = '70px';
+        qtyInput.style.marginLeft = '6px';
+        qtyInput.addEventListener('change', () => {
+            const value = Number(qtyInput.value);
+            item.quantity = value > 0 ? value : 1;
+            qtyInput.value = item.quantity;
+            updateCart();
+        });
+
+        const unitSelect = document.createElement('select');
+        ['kgs', 'pcs'].forEach((unitOption) => {
+            const opt = document.createElement('option');
+            opt.value = unitOption;
+            opt.textContent = unitOption;
+            opt.selected = item.unit === unitOption;
+            unitSelect.appendChild(opt);
+        });
+        unitSelect.addEventListener('change', () => {
+            item.unit = unitSelect.value;
+            qtyInput.min = item.unit === 'kgs' ? '0.25' : '1';
+            qtyInput.step = item.unit === 'kgs' ? '0.25' : '1';
+            if (item.unit === 'pcs') {
+                item.quantity = Math.max(1, Math.round(item.quantity));
+                qtyInput.value = item.quantity;
+            }
+            updateCart();
+        });
+
+        controls.appendChild(qtyLabel);
+        controls.appendChild(qtyInput);
+        controls.appendChild(unitSelect);
+        details.appendChild(controls);
+
+        const summary = document.createElement('div');
+        summary.textContent = `Subtotal: ₹${itemTotal.toFixed(2)}`;
+        summary.style.marginTop = '6px';
+        summary.style.fontSize = '13px';
+        details.appendChild(summary);
+
+        itemDiv.appendChild(details);
+
         const removeBtn=document.createElement('button'); removeBtn.textContent='Remove';
         removeBtn.addEventListener('click',()=>{cart.splice(i,1);updateCart();});
-        itemDiv.appendChild(removeBtn); div.appendChild(itemDiv);
+        itemDiv.appendChild(removeBtn);
+
+        div.appendChild(itemDiv);
     });
-    document.getElementById('cart-total').innerText=total;
+    document.getElementById('cart-total').innerText=total.toFixed(2);
     renderPaymentSummary();
     updateCartBadge();
 }
@@ -991,6 +1087,7 @@ async function submitOrder() {
     const customerCity=document.getElementById('customer-city').value.trim();
     const customerState=document.getElementById('customer-state').value.trim();
     const customerLandmark=document.getElementById('customer-landmark').value.trim();
+    const unit=document.getElementById('unit').value;
     const selected=cart.filter((item) => item.selected !== false);
 
     if(!selected.length){
@@ -1014,10 +1111,10 @@ async function submitOrder() {
     ].filter(Boolean).join(', ');
 
     try {
-        const response = await fetch('/api/orders', {
+        const response = await apiFetch('/api/orders', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ items: selected, method, details, email: currentUser?.email || '', deliveryAddress })
+            body: JSON.stringify({ items: selected, method, details, unit, email: currentUser?.email || '', deliveryAddress })
         });
 
         const result = await parseJsonResponse(response);
@@ -1026,7 +1123,7 @@ async function submitOrder() {
             throw new Error(result.message || 'Payment failed');
         }
 
-        alert(`Payment Successful!\nMethod: ${method}\nDetails: ${details || 'Not provided'}\nDelivery Address: ${deliveryAddress}\nTotal: ₹${result.order.total}`);
+        alert(`Payment Successful!\nMethod: ${method}\nDetails: ${details || 'Not provided'}\nUnit: ${unit}\nDelivery Address: ${deliveryAddress}\nTotal: ₹${result.order.total}`);
         cart=[];
         updateCart();
         await loadCustomerOrders();
